@@ -6,9 +6,9 @@
 ========         |.-""""""""""""""""""-.|   |-----|          ========
 ========         ||                    ||   | === |          ========
 ========         ||   KICKSTART.NVIM   ||   |-----|          ========
-========         ||                    ||   | === |          ========
-========         ||                    ||   |-----|          ========
-========         ||:Tutor              ||   |:::::|          ========
+========         ||    MODIFIED BY:    ||   | === |          ========
+========         ||   LARS VADGAARD    ||   |-----|          ========
+========         ||                    ||   |:::::|          ========
 ========         |'-..................-'|   |____o|          ========
 ========         `"")----------------(""`   ___________      ========
 ========        /::::::::::|  |::::::::::\  \ no mouse \     ========
@@ -45,7 +45,7 @@ do
   vim.o.number = true
   -- You can also add relative line numbers, to help with jumping.
   --  Experiment for yourself to see if you like it!
-  -- vim.o.relativenumber = true
+  vim.o.relativenumber = true
 
   -- Enable mouse mode, can be useful for resizing splits for example!
   vim.o.mouse = 'a'
@@ -61,6 +61,14 @@ do
 
   -- Enable break indent
   vim.o.breakindent = true
+
+  -- Prefer four spaces for indentation by default.
+  -- Filetype plugins, editorconfig, and guess-indent can still override this for
+  -- languages where another style is meaningful, like tabs in Makefiles.
+  vim.o.expandtab = true
+  vim.o.tabstop = 4
+  vim.o.softtabstop = 4
+  vim.o.shiftwidth = 4
 
   -- Enable undo/redo changes even after closing and reopening a file
   vim.o.undofile = true
@@ -148,15 +156,6 @@ do
   -- or just use <C-\><C-n> to exit terminal mode
   vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
-  -- Keybinds to make split navigation easier.
-  --  Use CTRL+<hjkl> to switch between windows
-  --
-  --  See `:help wincmd` for a list of all window commands
-  vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-  vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-  vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-  vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
-
   -- [[ Basic Autocommands ]]
   --  See `:help lua-guide-autocommands`
 
@@ -173,84 +172,91 @@ do
   -- Custom keymaps (vadgaard)
   -----------------------------
 
+  local map = vim.keymap.set
+
+  -- Make space an alias for <leader>
+  map({ 'n', 'x' }, '<Space>', vim.g.mapleader,
+    { remap = true, desc = 'Leader alias' })
+
   -- Escape on jk
-  vim.keymap.set("i", "jk", "<ESC>", { desc = "Exit insert mode" })
+  map('i', 'jk', '<Esc>', { desc = 'Exit insert mode' })
 
   -- Reload init.lua
-  vim.keymap.set("n", "<Leader>so", ":so $MYVIMRC<CR>", { desc = "Reload init.lua" })
+  map('n', '<leader>so', '<cmd>source $MYVIMRC<CR>', { desc = '[S]ource init.lua' })
 
   -- Execute last command
-  vim.keymap.set("n", "<Leader>.", "@:<CR>", { desc = "Execute last command" })
+  map('n', '<leader>.', '@:<CR>', { desc = 'Execute last command' })
 
   -- Alternative split navigation
-  vim.keymap.set("n", "<Leader>h", "<C-w><C-h>", { desc = "Move focus to the left window" })
-  vim.keymap.set("n", "<Leader>l", "<C-w><C-l>", { desc = "Move focus to the right window" })
-  vim.keymap.set("n", "<Leader>j", "<C-w><C-j>", { desc = "Move focus to the window below" })
-  vim.keymap.set("n", "<Leader>k", "<C-w><C-k>", { desc = "Move focus to the window above" })
+  map('n', '<C-h>', '<C-w><C-h>', { desc = '[W]indow focus left' })
+  map('n', '<C-l>', '<C-w><C-l>', { desc = '[W]indow focus right' })
+  map('n', '<C-j>', '<C-w><C-j>', { desc = '[W]indow focus below' })
+  map('n', '<C-k>', '<C-w><C-k>', { desc = '[W]indow focus above' })
 
   -- Keybind to create split windows.
-  --  Use <leader>s[n](v|o) for creating (possibly [n]ew)
-  --  [v]ertical/h[o]rizontal window
-  vim.keymap.set("n", "<Leader>sco", ":vsp<CR>", { desc = "[S]plit h[o]rizontally with [c]urrent buffer" })
-  vim.keymap.set("n", "<Leader>scv", ":sp<CR>", { desc = "[S]plit [v]ertically with [c]urrent buffer" })
-  vim.keymap.set("n", "<Leader>sno", ":Sexplore!<CR>", { desc = "[S]plit h[o]rizontally with [n]ew buffer" })
-  vim.keymap.set("n", "<Leader>snv", ":Sexplore <CR>", { desc = "[s]plit [v]ertically with [n]ew buffer" })
-
-  -- Use arrow keys to resize split
-  vim.keymap.set("n", "<up>", "<C-W>+", { desc = 'Move splitter up' })
-  vim.keymap.set("n", "<down>", "<C-W>-", { desc = 'Move splitter down' })
-  vim.keymap.set("n", "<left>", "3<C-W><", { desc = 'Move splitter to the left' })
-  vim.keymap.set("n", "<right>", "3<C-W>>", { desc = 'Move splitter to the right' })
+  --  Use <leader>w[c|n][s|v] for [w]indow splits with a [c]urrent or [n]ew buffer.
+  map('n', '<leader>wcs', '<cmd>split<CR>', { desc = '[W]indow split current buffer' })
+  map('n', '<leader>wcv', '<cmd>vsplit<CR>', { desc = '[W]indow vertical split current buffer' })
+  map('n', '<leader>wns', '<cmd>Sexplore!<CR>', { desc = '[W]indow split new buffer' })
+  map('n', '<leader>wnv', '<cmd>Sexplore<CR>', { desc = '[W]indow vertical split new buffer' })
 
   -- Quick cursor placement
-  vim.keymap.set("n", "H", "^")
-  vim.keymap.set("n", "L", "$")
-  vim.keymap.set("v", "H", "^")
-  vim.keymap.set("v", "L", "$")
+  map({ 'n', 'x' }, 'H', '^', { desc = 'Go to first non-blank character' })
+  map({ 'n', 'x' }, 'L', '$', { desc = 'Go to end of line' })
 
   -- Use <leader>v to go into blockmode
-  vim.keymap.set("n", "<Leader>v", "<C-v>", { desc = "Enter visual block mode" })
-  vim.keymap.set("v", "<Leader>v", "<C-v>", { desc = "Enter visual block mode" })
-
-  -- Use J/K to move current line down/up
-  vim.keymap.set("v", "J", ":m '>+1<cr>gv=gv", { desc = "Move selected line down" })
-  vim.keymap.set("v", "K", ":m '<-2<cr>gv=gv", { desc = "Move selected line up" })
+  map({ 'n', 'x' }, '<leader>v', '<C-v>', { desc = 'Enter visual block mode' })
 
   -- Use graphical movement cleverly
-  vim.keymap.set("n", "j", "(v:count ? 'j' : 'gj')", { expr = true })
-  vim.keymap.set("n", "k", "(v:count ? 'k' : 'gk')", { expr = true })
+  map('n', 'j', "(v:count ? 'j' : 'gj')", { expr = true, desc = 'Move down by display line' })
+  map('n', 'k', "(v:count ? 'k' : 'gk')", { expr = true, desc = 'Move up by display line' })
 
   -- Better visual mode toggling
-  vim.keymap.set("v", "v", "<Esc>gV")
+  map('x', 'v', '<Esc>gV', { desc = 'Toggle visual mode kind' })
 
   -- Reselect lines after indenting
-  vim.keymap.set("v", "<", "<gv")
-  vim.keymap.set("v", ">", ">gv")
+  map('x', '<', '<gv', { desc = 'Indent left and reselect' })
+  map('x', '>', '>gv', { desc = 'Indent right and reselect' })
 
   -- Reselect after changing case
-  vim.keymap.set("v", "~", "~gv")
+  map('x', '~', '~gv', { desc = 'Swap case and reselect' })
 
   -- Make Y behave as anything else
-  vim.keymap.set("n", "Y", "y$")
+  map('n', 'Y', 'y$', { desc = 'Yank to end of line' })
 
   -- Save file and edit new
-  vim.keymap.set("n", "<Leader>e", ":w <bar> Explore <CR>", { desc = "Edit for new file" })
+  map('n', '<leader>e', '<cmd>write | Explore<CR>', { desc = 'Save and browse files' })
 
   -- Go to end of selection when pasting and yanking
-  vim.keymap.set("n", "p", "p`]")
-  vim.keymap.set("v", "y", "y`]")
-  vim.keymap.set("v", "p", "p`]")
+  map('n', 'p', 'p`]', { desc = 'Paste and jump to end' })
+  map('x', 'y', 'y`]', { desc = 'Yank and jump to end' })
+  map('x', 'p', 'p`]', { desc = 'Paste and jump to end' })
 
   -- Use yY/dD to yank/delete current line except newline
-  vim.keymap.set("n", "yY", "^Y", { desc = "Yank current line except newline" })
-  vim.keymap.set("n", "dD", "^D", { desc = "Delete current line except newline" })
+  map('n', 'yY', '^Y', { desc = 'Yank current line except newline' })
+  map('n', 'dD', '^D', { desc = 'Delete current line except newline' })
 
   -- Use gu/gl to make line upper/lower case
-  vim.keymap.set("n", "gu", "gUU", { desc = "Make current line upper case" })
-  vim.keymap.set("n", "gl", "guu", { desc = "Make current line lower case" })
+  map('n', 'gu', 'gUU', { desc = 'Make current line upper case' })
+  map('n', 'gl', 'guu', { desc = 'Make current line lower case' })
 
   -- GOTO line number with Enter
-  vim.keymap.set("n", "<CR>", "G")
+  map('n', '<leader><CR>', 'G', { desc = 'Go to last line' })
+
+  local custom_augroup = vim.api.nvim_create_augroup('vadgaard-custom', { clear = true })
+
+  -- Convert indentation tabs to spaces only when the buffer uses expandtab, and
+  -- remove trailing whitespace on save.
+  vim.api.nvim_create_autocmd('BufWritePre', {
+    desc = 'Normalize whitespace before saving',
+    group = custom_augroup,
+    callback = function(event)
+      local view = vim.fn.winsaveview()
+      if vim.bo[event.buf].expandtab then vim.cmd [[silent! keepjumps keeppatterns retab]] end
+      vim.cmd [[silent! keepjumps keeppatterns %s/\s\+$//e]]
+      vim.fn.winrestview(view)
+    end,
+  })
 
 end
 
@@ -373,14 +379,44 @@ do
   vim.pack.add { gh 'folke/which-key.nvim' }
   require('which-key').setup {
     -- Delay between pressing a key and opening which-key (milliseconds)
-    delay = 0,
+    delay = 400,
     icons = { mappings = vim.g.have_nerd_font },
     -- Document existing key chains
     spec = {
       { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
       { '<leader>t', group = '[T]oggle' },
-      { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
+      { '<leader>w', group = '[W]indows' },
       { 'gr', group = 'LSP Actions', mode = { 'n' } },
+    },
+  }
+
+  -- Keep split proportions stable when the outer Neovim UI is resized.
+  vim.pack.add { gh 'kwkarlwang/bufresize.nvim' }
+  local resize_opts = { noremap = true, silent = true }
+  local function resize_key(lhs, rhs, desc) return { 'n', lhs, rhs, vim.tbl_extend('force', resize_opts, { desc = desc }) } end
+  require('bufresize').setup {
+    register = {
+      keys = {
+        { 'n', '<C-w><', '<C-w><', resize_opts },
+        { 'n', '<C-w>>', '<C-w>>', resize_opts },
+        { 'n', '<C-w>+', '<C-w>+', resize_opts },
+        { 'n', '<C-w>-', '<C-w>-', resize_opts },
+        { 'n', '<C-w>_', '<C-w>_', resize_opts },
+        { 'n', '<C-w>=', '<C-w>=', resize_opts },
+        { 'n', '<C-w>|', '<C-w>|', resize_opts },
+        resize_key('<Up>', '<C-w>+', 'Increase window height'),
+        resize_key('<Down>', '<C-w>-', 'Decrease window height'),
+        resize_key('<Left>', '3<C-w><', 'Decrease window width'),
+        resize_key('<Right>', '3<C-w>>', 'Increase window width'),
+        { '', '<LeftRelease>', '<LeftRelease>', resize_opts },
+        { 'i', '<LeftRelease>', '<LeftRelease><C-o>', resize_opts },
+      },
+      trigger_events = { 'BufWinEnter', 'WinEnter' },
+    },
+    resize = {
+      keys = {},
+      trigger_events = { 'VimResized' },
+      increment = false,
     },
   }
 
@@ -432,6 +468,21 @@ do
   -- - sd'   - [S]urround [D]elete [']quotes
   -- - sr)'  - [S]urround [R]eplace [)] [']
   require('mini.surround').setup()
+
+  -- Move selections and lines without hand-written `:move` mappings.
+  require('mini.move').setup {
+    mappings = {
+      left = '',
+      right = '',
+      down = '<leader>j',
+      up = '<leader>k',
+
+      line_left = '',
+      line_right = '',
+      line_down = '<leader>j',
+      line_up = '<leader>k',
+    },
+  }
 
   -- Simple and easy statusline.
   --  You could remove this setup call if you don't like it,
