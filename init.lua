@@ -426,18 +426,56 @@ do
   -- change the command under that to load whatever the name of that colorscheme is.
   --
   -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-  vim.pack.add { gh 'folke/tokyonight.nvim' }
-  ---@diagnostic disable-next-line: missing-fields
-  require('tokyonight').setup {
-    styles = {
-      comments = { italic = false }, -- Disable italics in comments
-    },
-  }
+  -- vim.pack.add { gh 'folke/tokyonight.nvim' }
+  -- ---@diagnostic disable-next-line: missing-fields
+  -- require('tokyonight').setup {
+  --   styles = {
+  --     comments = { italic = false }, -- Disable italics in comments
+  --   },
+  -- }
+  vim.pack.add { gh 'ellisonleao/gruvbox.nvim' }
+  require('gruvbox').setup()
 
-  -- Load the colorscheme here.
-  -- Like many other themes, this one has different styles, and you could load
-  -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-  vim.cmd.colorscheme 'tokyonight-night'
+  local background_state_file = vim.fn.stdpath 'state' .. '/background'
+
+  local function read_background()
+    local file = io.open(background_state_file, 'r')
+    if not file then return nil end
+
+    local value = file:read '*l'
+    file:close()
+
+    if value == 'dark' or value == 'light' then return value end
+  end
+
+  local function write_background(value)
+    vim.fn.mkdir(vim.fn.fnamemodify(background_state_file, ':h'), 'p')
+
+    local file = assert(io.open(background_state_file, 'w'))
+    file:write(value, '\n')
+    file:close()
+  end
+
+  local function apply_background(value, persist)
+    if value ~= 'dark' and value ~= 'light' then return end
+    if vim.o.background ~= value then vim.o.background = value end
+    if persist then write_background(value) end
+  end
+
+  apply_background(read_background() or 'dark')
+  vim.cmd.colorscheme 'gruvbox'
+
+  vim.keymap.set('n', '<leader>tb', function()
+    local background = vim.o.background == 'dark' and 'light' or 'dark'
+    apply_background(background, true)
+  end, { desc = '[T]oggle [B]ackground' })
+
+  _G.vadgaard_background_watcher = vim.uv.new_fs_event()
+  if _G.vadgaard_background_watcher then
+    _G.vadgaard_background_watcher:start(vim.fn.fnamemodify(background_state_file, ':h'), {}, function()
+      vim.schedule(function() apply_background(read_background()) end)
+    end)
+  end
 
   -- Highlight todo, notes, etc in comments
   vim.pack.add { gh 'folke/todo-comments.nvim' }
