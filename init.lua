@@ -99,7 +99,8 @@ do
   --   See `:help lua-options`
   --   and `:help lua-guide-options`
   vim.o.list = true
-  vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
+  vim.opt.listchars = { tab = '» ', trail = '•', nbsp = '␣' }
+  vim.opt.showbreak = "↳"
 
   -- Preview substitutions live, as you type!
   vim.o.inccommand = 'split'
@@ -187,18 +188,18 @@ do
   -- Execute last command
   map('n', '<leader>.', '@:<CR>', { desc = 'Execute last command' })
 
-  -- Alternative split navigation
+  -- Keybinds to create split windows.
+  --  Use <leader>w[c|n][s|v] for [w]indow splits with a [c]urrent or [n]ew buffer.
+  map('n', '<leader>wcs', '<cmd>split<CR>', { desc = '[W]indow [c]urrent [s]plit buffer' })
+  map('n', '<leader>wcv', '<cmd>vsplit<CR>', { desc = '[W]indow [c]urrent [v]ertical split buffer' })
+  map('n', '<leader>wns', '<cmd>Sexplore!<CR>', { desc = '[W]indow [n]ew [s]plit buffer' })
+  map('n', '<leader>wnv', '<cmd>Sexplore<CR>', { desc = '[W]indow [n]ew [v]ertical split buffer' })
+
+  -- Keybinds to navigate split windows
   map('n', '<C-h>', '<C-w><C-h>', { desc = '[W]indow focus left' })
   map('n', '<C-l>', '<C-w><C-l>', { desc = '[W]indow focus right' })
   map('n', '<C-j>', '<C-w><C-j>', { desc = '[W]indow focus below' })
   map('n', '<C-k>', '<C-w><C-k>', { desc = '[W]indow focus above' })
-
-  -- Keybind to create split windows.
-  --  Use <leader>w[c|n][s|v] for [w]indow splits with a [c]urrent or [n]ew buffer.
-  map('n', '<leader>wcs', '<cmd>split<CR>', { desc = '[W]indow split current buffer' })
-  map('n', '<leader>wcv', '<cmd>vsplit<CR>', { desc = '[W]indow vertical split current buffer' })
-  map('n', '<leader>wns', '<cmd>Sexplore!<CR>', { desc = '[W]indow split new buffer' })
-  map('n', '<leader>wnv', '<cmd>Sexplore<CR>', { desc = '[W]indow vertical split new buffer' })
 
   -- Quick cursor placement
   map({ 'n', 'x' }, 'H', '^', { desc = 'Go to first non-blank character' })
@@ -223,6 +224,12 @@ do
 
   -- Make Y behave as anything else
   map('n', 'Y', 'y$', { desc = 'Yank to end of line' })
+
+  -- Use U for redo
+  map('n', 'U', '<C-r>', { desc = 'Redo' })
+
+  -- Toggle fold under cursor
+  map('n', 'zz', 'za', { desc = 'Toggle fold' })
 
   -- Save file and edit new
   map('n', '<leader>e', '<cmd>write | Explore<CR>', { desc = 'Save and browse files' })
@@ -420,23 +427,22 @@ do
     },
   }
 
-  -- [[ Colorscheme ]]
-  -- You can easily change to a different colorscheme.
-  -- Change the name of the colorscheme plugin below, and then
-  -- change the command under that to load whatever the name of that colorscheme is.
-  --
-  -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-  -- vim.pack.add { gh 'folke/tokyonight.nvim' }
-  -- ---@diagnostic disable-next-line: missing-fields
-  -- require('tokyonight').setup {
-  --   styles = {
-  --     comments = { italic = false }, -- Disable italics in comments
-  --   },
-  -- }
-  vim.pack.add { gh 'ellisonleao/gruvbox.nvim' }
-  require('gruvbox').setup()
+  -- WezTerm owns the shared dark/light state; Neovim reads and writes the same file.
+  local function state_home()
+    if vim.env.COLOR_MODE_STATE_HOME then return vim.env.COLOR_MODE_STATE_HOME end
+    if vim.env.XDG_STATE_HOME then return vim.env.XDG_STATE_HOME end
 
-  local background_state_file = vim.fn.stdpath 'state' .. '/background'
+    if vim.fn.has 'win32' == 1 then
+      return vim.env.LOCALAPPDATA or ((vim.env.USERPROFILE or vim.env.HOME or '.') .. '\\AppData\\Local')
+    end
+
+    return (vim.env.HOME or '.') .. '/.local/state'
+  end
+
+  local background_state_file = vim.fs.joinpath(state_home(), 'wezterm', 'background')
+  local background_state_dir = vim.fn.fnamemodify(background_state_file, ':h')
+  local background_state_name = vim.fn.fnamemodify(background_state_file, ':t')
+  vim.fn.mkdir(background_state_dir, 'p')
 
   local function read_background()
     local file = io.open(background_state_file, 'r')
@@ -449,37 +455,72 @@ do
   end
 
   local function write_background(value)
-    vim.fn.mkdir(vim.fn.fnamemodify(background_state_file, ':h'), 'p')
+    vim.fn.mkdir(background_state_dir, 'p')
 
     local file = assert(io.open(background_state_file, 'w'))
     file:write(value, '\n')
     file:close()
   end
 
+  -- [[ Colorscheme ]]
+  -- You can easily change to a different colorscheme.
+  -- Change the name of the colorscheme plugin below, and then
+  -- change the command under that to load whatever the name of that colorscheme is.
+  --
+  -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
+  vim.pack.add { gh 'folke/tokyonight.nvim' }
+  vim.pack.add { gh 'ellisonleao/gruvbox.nvim' }
+  vim.pack.add { gh 'catppuccin/nvim' }
+
+  -- Set up colorschemes
+  require('tokyonight').setup()
+  require('gruvbox').setup()
+  require('catppuccin').setup()
+
+  -- Define dark and light themes.
+  local theme = {
+    default_background = 'dark',
+    colorscheme = {
+      dark = 'catppuccin-mocha',
+      light = 'gruvbox',
+    },
+  }
+
+  -- Apply a background according to the persisted state
   local function apply_background(value, persist)
     if value ~= 'dark' and value ~= 'light' then return end
+
+    local colorscheme = theme.colorscheme[value]
+    if not colorscheme then return end
+
     if vim.o.background ~= value then vim.o.background = value end
+    if vim.g.colors_name ~= colorscheme then vim.cmd.colorscheme(colorscheme) end
+
     if persist then write_background(value) end
   end
 
-  apply_background(read_background() or 'dark')
-  vim.cmd.colorscheme 'gruvbox'
+  -- Apply the background once on startup
+  apply_background(read_background() or theme.default_background)
 
-  vim.keymap.set('n', '<leader>tb', function()
-    local background = vim.o.background == 'dark' and 'light' or 'dark'
-    apply_background(background, true)
-  end, { desc = '[T]oggle [B]ackground' })
+  -- Get notified when the state changes
+  if _G.vadgaard_background_watcher then
+    pcall(function()
+      _G.vadgaard_background_watcher:stop()
+      if not _G.vadgaard_background_watcher:is_closing() then _G.vadgaard_background_watcher:close() end
+    end)
+  end
 
   _G.vadgaard_background_watcher = vim.uv.new_fs_event()
   if _G.vadgaard_background_watcher then
-    _G.vadgaard_background_watcher:start(vim.fn.fnamemodify(background_state_file, ':h'), {}, function()
+    _G.vadgaard_background_watcher:start(background_state_dir, {}, function(_, filename)
+      if filename ~= background_state_name then return end
       vim.schedule(function() apply_background(read_background()) end)
     end)
   end
 
   -- Highlight todo, notes, etc in comments
   vim.pack.add { gh 'folke/todo-comments.nvim' }
-  require('todo-comments').setup { signs = false }
+  require('todo-comments').setup { signs = true }
 
   -- [[ mini.nvim ]]
   --  A collection of various small independent plugins/modules
@@ -793,8 +834,6 @@ do
     -- But for many setups, the LSP (`ts_ls`) will work just fine
     -- ts_ls = {},
 
-    stylua = {}, -- Used to format Lua code
-
     -- Special Lua Config, as recommended by neovim help docs
     lua_ls = {
       on_init = function(client)
@@ -850,6 +889,7 @@ do
   local ensure_installed = vim.tbl_keys(servers or {})
   vim.list_extend(ensure_installed, {
     -- You can add other tools here that you want Mason to install
+    'stylua', -- Used by conform.nvim to format Lua code
   })
 
   require('mason-tool-installer').setup { ensure_installed = ensure_installed }
@@ -886,6 +926,7 @@ do
     },
     -- You can also specify external formatters in here.
     formatters_by_ft = {
+      lua = { 'stylua' },
       -- rust = { 'rustfmt' },
       -- Conform can also run multiple formatters sequentially
       -- python = { "isort", "black" },
