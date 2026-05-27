@@ -481,7 +481,8 @@ do
   local theme = {
     default_background = 'dark',
     colorscheme = {
-      dark = 'catppuccin-mocha',
+      -- dark = 'catppuccin-mocha',
+      dark = 'tokyonight',
       light = 'gruvbox',
     },
   }
