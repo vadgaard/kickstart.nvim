@@ -1,0 +1,338 @@
+" ============================================================
+" IdeaVim config adapted from init.lua
+" ============================================================
+
+" ------------------------------------------------------------
+" Core Vim-ish settings
+" ------------------------------------------------------------
+
+set scrolloff=10
+set history=1000
+set relativenumber
+set number
+set hlsearch
+set incsearch
+set ignorecase
+set smartcase
+set gdefault
+set expandtab
+set tabstop=4
+set softtabstop=4
+set shiftwidth=4
+
+" IdeaVim settings
+set ideajoin
+set ideamarks
+set idearefactormode=normal
+set ideastatusicon=gray
+
+" IdeaVim/plugin features matching Neovim plugins where possible
+set surround
+set which-key
+set commentary
+set argtextobj
+set textobj-entire
+set vim-paragraph-motion
+set textobj-indent
+set easymotion
+set highlightedyank
+set ReplaceWithRegister
+set exchange
+set NERDTree
+
+let g:argtextobj_pairs="[:],(:),<:>"
+let g:highlightedyank_highlight_duration = "1000"
+let g:highlightedyank_highlight_color = "rgba(57, 197, 187, 155)"
+
+" Clipboard
+set clipboard+=unnamedplus
+set clipboard+=ideaput
+
+" Leader
+let mapleader=","
+nmap <Space> <leader>
+xmap <Space> <leader>
+
+" ------------------------------------------------------------
+" Core editing mappings mirrored from init.lua
+" ------------------------------------------------------------
+
+map <CR> :noh<CR>
+inoremap jk <Esc>
+
+nnoremap <leader>rv :action IdeaVim.ReloadVimRc.reload<CR>
+nnoremap <leader>. @:<CR>
+
+map H ^
+map L $
+vmap H ^
+vmap L $
+
+map <leader>v <C-v>
+vmap v <Esc>gV
+
+vnoremap < <gv
+vnoremap > >gv
+vnoremap ~ ~gv
+
+nmap Y y$
+map U <C-r>
+map zz <Action>(ExpandCollapseToggleAction)
+map za <Action>(CollapseAllRegions)
+map zA <Action>(ExpandAllRegions)
+
+nmap <leader><CR> G
+
+" Move lines/selections, matching mini.move in init.lua
+nnoremap <leader>j :move .+1<CR>==
+nnoremap <leader>k :move .-2<CR>==
+vnoremap <leader>j :move '>+1<CR>gv=gv
+vnoremap <leader>k :move '<-2<CR>gv=gv
+
+" Paste/yank cursor placement approximations
+nnoremap p p`]
+vnoremap y y`]
+vnoremap p p`]
+
+nmap yY ^Y
+nmap dD ^D
+nmap gu gUU
+nmap gl guu
+
+" Whole-buffer copy, IdeaVim-specific convenience
+map <C-a> ggVG"+y
+
+" ------------------------------------------------------------
+" Windows and editor splits: <leader>w mirrors init.lua
+" ------------------------------------------------------------
+
+map <C-h> <C-w>h
+map <C-j> <C-w>j
+map <C-k> <C-w>k
+map <C-l> <C-w>l
+
+map <leader>wcs <Action>(SplitHorizontally)
+map <leader>wcv <Action>(SplitVertically)
+map <leader>wns <Action>(SplitHorizontally)<CR><Action>(ActivateProjectToolWindow)
+map <leader>wnv <Action>(SplitVertically)<CR><Action>(ActivateProjectToolWindow)
+map <leader>wH <Action>(MoveTabLeft)
+map <leader>wJ <Action>(MoveTabDown)
+map <leader>wK <Action>(MoveTabUp)
+map <leader>wL <Action>(MoveTabRight)
+
+map <Up> <Action>(StretchSplitToTop)
+map <Down> <Action>(StretchSplitToBottom)
+map <Left> <Action>(StretchSplitToLeft)
+map <Right> <Action>(StretchSplitToRight)
+
+map <leader>wh <Action>(HideAllWindows)
+map <leader>wm <Action>(MaximizeEditorInSplit)
+map <leader>wu <Action>(UnsplitAll)
+nnoremap <leader>w= :action Unsplit<CR>
+nnoremap <leader>wo :action MoveEditorToOppositeTabGroup<CR>
+nnoremap <leader>ww :action NextWindow<CR>
+nnoremap <leader>wN :action EditSourceInNewWindow<CR>
+
+map <C-p> <Action>(JumpToLastWindow)
+map <M-i> <Action>(PrevSplitter)
+map <M-o> <Action>(NextSplitter)
+map <C-i> <Action>(Back)
+map <C-o> <Action>(Forward)
+
+" ------------------------------------------------------------
+" Search/navigation: <leader>s mirrors Telescope's search namespace
+" ------------------------------------------------------------
+
+map <leader>sf <Action>(GotoFile)
+map <leader>sg <Action>(FindInPath)
+map <leader>sw <Action>($SearchWeb)
+map <leader>sd <Action>(GotoNextError)
+map <leader>sr <Action>(RecentFiles)
+map <leader>s. <Action>(RecentLocations)
+map <leader>sc <Action>(GotoAction)
+map <leader>ss <Action>(GotoSymbol)
+map <leader>sk <Action>(VimActions)
+map <leader>sn <Action>(SelectIn)
+map <leader>su <Action>(ShowUsages)
+
+" Backslash aliases for very IDE-specific global searches
+nmap \\fp <Action>(FindInPath)
+nmap \\rp <Action>(ReplaceInPath)
+nmap \\sw <Action>($SearchWeb)
+
+" ------------------------------------------------------------
+" LSP/code intelligence style mappings
+" ------------------------------------------------------------
+
+map grr <Action>(FindUsages)
+map gri <Action>(GotoImplementation)
+map grd <Action>(GotoDeclaration)
+map grD <Action>(GotoTypeDeclaration)
+map grt <Action>(GotoTypeDeclaration)
+map grn <Action>(RenameElement)
+map gra <Action>(ShowIntentionActions)
+
+map gd <Action>(GotoDeclaration)
+map gD <Action>(GotoTypeDeclaration)
+map gi <Action>(GotoImplementation)
+map go <Action>(GotoSuperMethod)
+map gO <Action>(FileStructurePopup)
+map ga <Action>(GotoAction)
+map gc <Action>(GotoClass)
+map gf <Action>(GotoFile)
+map gs <Action>(GotoSymbol)
+map gt <Action>(GoToTest)
+map gT <Action>(TextSearchAction)
+map gn <Action>(ShowNavBar)
+
+map <leader>qp <Action>(QuickPreview)
+map <leader>qd <Action>(QuickDefinition)
+map <leader>qD <Action>(QuickTypeDefinition)
+map <leader>qi <Action>(QuickImplementations)
+map <leader>qj <Action>(QuickJavaDoc)
+map <leader>qf <Action>(ShowIntentionActions)
+map <leader>qe <Action>(ShowErrorDescription)
+map <leader>qh <Action>(HighlightUsagesInFile)
+
+nmap <leader>hc <Action>(CallHierarchy)
+nmap <leader>hm <Action>(MethodHierarchy)
+nmap <leader>ht <Action>(TypeHierarchy)
+
+" ------------------------------------------------------------
+" Formatting/comment/code actions
+" ------------------------------------------------------------
+
+map <leader>f <Action>(ReformatCode)
+map <leader>F V<Action>(ReformatCode)
+map <leader>c <Action>(CommentByLineComment)
+map <leader>C <Action>(CommentByBlockComment)
+map <leader>om <Action>(OverrideMethods)
+map <leader>im <Action>(ImplementMethods)
+nmap \\o <Action>(SelectAllOccurrences)
+nmap \\g <Action>(Generate)
+nmap \\fc <Action>(ReformatCode)
+nmap \\ic <Action>(InspectCode)
+nmap \\t <Action>(GoToTest)
+
+" ------------------------------------------------------------
+" Files/project/editor tabs
+" ------------------------------------------------------------
+
+map <leader>e <Action>(ActivateProjectToolWindow)
+map <leader>of <Action>(OpenFile)
+map <leader>oh <Action>(LocalHistory.ShowHistory)
+map <leader>op <Action>(ManageRecentProjects)
+map <leader>yp <Action>(CopyAbsolutePath)
+map <leader>yf <Action>(ShowFilePath)
+map <leader>p <Action>(PinActiveEditorTab)
+
+map <leader>xx <Action>(CloseContent)
+map <leader>xs <Action>(CloseAllEditors)
+map <leader>xo <Action>(CloseAllEditorsButActive)
+map <leader>xp <Action>(CloseAllUnpinnedEditors)
+map <leader>xa <Action>(Exit)
+
+map <C-S-h> <Action>(PreviousTab)
+map <C-S-l> <Action>(NextTab)
+map <leader>1 <Action>(GoToTab1)
+map <leader>2 <Action>(GoToTab2)
+map <leader>3 <Action>(GoToTab3)
+map <leader>4 <Action>(GoToTab4)
+map <leader>5 <Action>(GoToTab5)
+map <leader>6 <Action>(GoToTab6)
+map <leader>7 <Action>(GoToTab7)
+map <leader>8 <Action>(GoToTab8)
+map <leader>9 <Action>(GoToTab9)
+
+" ------------------------------------------------------------
+" Toggle/tools namespace: <leader>t
+" ------------------------------------------------------------
+
+map <leader>tt <Action>(ActivateTerminalToolWindow)
+map <leader>tc <Action>(Terminal.OpenInTerminal)
+map <leader>to <Action>(ActivateTODOToolWindow)
+map <leader>ts <Action>(tasks.goto)
+
+" ------------------------------------------------------------
+" Run/debug/build/refactor namespaces
+" ------------------------------------------------------------
+
+map <leader>rc <Action>(RedesignedRunConfigurationSelector)
+map <leader>rx <Action>(ChooseRunConfiguration)
+map <leader>rr <Action>(Rerun)
+map <leader>rt <Action>(RunTests)
+map <leader>rs <Action>(Stop)
+
+map <leader>dc <Action>(ContextDebug)
+map <leader>dx <Action>(Debug)
+map <leader>db <Action>(ToggleLineBreakpoint)
+map <leader>de <Action>(EditBreakpoint)
+map <leader>dv <Action>(ViewBreakpoints)
+map <leader>dr <Action>(ConfigurationXDebuggerResumeAction)
+map <leader>ds <Action>(Stop)
+
+map <leader>B <Action>(Build)
+map <leader>bb <Action>(BuildMenu)
+map <leader>bc <Action>(CMake.ReloadCMakeProject)
+
+map <leader>rn <Action>(RenameElement)
+map <leader>re <Action>(Refactorings.QuickListPopupAction)
+map <leader>ru <Action>(Unwrap)
+map <leader>rw <Action>(SurroundWith)
+map <leader>rd <Action>(SafeDelete)
+map <leader>ri <Action>(OptimizeImports)
+
+" ------------------------------------------------------------
+" Menus and JetBrains-only conveniences
+" ------------------------------------------------------------
+
+map <leader>mm <Action>(MainMenu)
+map <leader>ma <Action>(AnalyzeMenu)
+map <leader>mb <Action>(BuildMenu)
+map <leader>mc <Action>(CodeMenu)
+map <leader>mf <Action>(FindMenuGroup)
+map <leader>mg <Action>(GoToMenu)
+map <leader>ms <Action>(ScopeViewPopupMenu)
+map <leader>mt <Action>(EditorTabPopupMenu)
+map <leader>mw <Action>(ToolWindowsGroup)
+
+map <leader>a <Action>(GotoAction)
+map <leader>z <Action>(ToggleZenMode)
+
+nmap mm <Action>(ToggleBookmark)
+nmap ms <Action>(ShowBookmarks)
+
+map \\jl <Action>(EditorJoinLines)
+map \\cg <Action>(Github.Create.Gist)
+map \\v <Action>(VimActions)
+
+" Translation (requires Translation plugin)
+nmap \\tt <Action>($ShowTranslationDialogAction)
+nmap \\ts <Action>($TranslateTextComponent)
+nmap \\ti <Action>($InclusiveTranslateAction)
+nmap \\te <Action>($ExclusiveTranslateAction)
+
+" String manipulation (requires String Manipulation plugin)
+map \\ss <Action>(osmedile.intellij.stringmanip.PopupChoiceAction)
+
+" Code screenshot (requires Code Screenshots plugin)
+map \\cs <Action>(one.util.ideaplugin.screenshoter.CopyImageAction)
+
+" ------------------------------------------------------------
+" Bracket/source navigation
+" ------------------------------------------------------------
+
+nmap [g <Action>(GotoPreviousError)
+nmap ]g <Action>(GotoNextError)
+nmap gE <Action>(GotoPreviousError)
+nmap ge <Action>(GotoNextError)
+nmap [u <Action>(GotoPrevElementUnderCaretUsage)
+nmap ]u <Action>(GotoNextElementUnderCaretUsage)
+nmap [o <Action>(PreviousOccurence)
+nmap ]o <Action>(NextOccurence)
+nmap [m <Action>(MethodUp)
+nmap ]m <Action>(MethodDown)
+nmap [[ <Action>(MethodUp)
+nmap ]] <Action>(MethodDown)
+nmap [c <Action>(JumpToLastChange)
+nmap ]c <Action>(JumpToNextChange)
